@@ -359,24 +359,17 @@
       }
     }, 1500);
 
-    // 🎬 MONETAG MINI APP REKLAMA FUNKSIYASI
+    // 🎬 MONETAG REWARDED INTERSTITIAL FUNKSIYASI (587-rasmdagi kod asosida)
     function watchAdForBoost() {
       if (typeof show_11547245 === 'function') {
-        show_11547245({
-          type: 'inApp',
-          inAppSettings: {
-            frequency: 2,
-            capping: 0.1,
-            interval: 30,
-            timeout: 5,
-            everyPage: false
-          }
-        }).then(() => {
+        show_11547245().then(() => {
+          // Reklama oxirigacha ko'rildi - energiyani to'ldiramiz
           energy = maxEnergy;
           updateUI();
-          alert("🎉 Reklama ko'rildi! Energiya to'liq to'ldirildi.");
+          alert("🎉 Tabriklaymiz! Energiya to'ldirildi.");
         }).catch((err) => {
-          console.log("Monetag Ad error/close:", err);
+          console.log("Reklama yopildi yoki xatolik:", err);
+          // Captcha yoki boshqa sababli reklama yopilsa ham o'yin qotib qolmasligi uchun:
           energy = maxEnergy;
           updateUI();
         });
@@ -525,5 +518,5 @@
     setInterval(renderLeaderboard, 10000);
   </script>
 </body>
-    </html>
+  </html>
   

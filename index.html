@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Telegram Stars Miner</title>
 
+  <script src="//libtl.com/sdk.js" data-zone="11547245" data-sdk="show_11547245"></script>
+
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -238,9 +240,6 @@
   <script>
     const BOT_USERNAME = "Stars_Miner_Webapp_Bot";
 
-    // Monetag Direct Link (Smart Link) manzilingizni shu yerga qo'ying:
-    const SMART_LINK_URL = "https://www.highcpmgate.com/YOUR_SMART_LINK_ID";
-
     const SUPABASE_URL = "https://hqjmcfaywfjwjqamyaik.supabase.co";
     const SUPABASE_KEY = "sb_publishable_uNElf3NVizJmJQc5DIWgEg___yFG_gu";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -360,21 +359,21 @@
       }
     }, 1500);
 
-    // 🎬 SMART LINK / DIRECT LINK ORQALI REKLAMA OCHISH
+    // 🎬 MONETAG SDK REKLAMA FUNKSIYASI (Sizning kodingiz asosida)
     function watchAdForBoost() {
-      // Telegram ichida maxsus oynada reklamani ochish (yuqorida [X] tugmasi bo'ladi)
-      if (tg && tg.openLink) {
-        tg.openLink(SMART_LINK_URL, { try_instant_view: false });
+      if (typeof show_11547245 === 'function') {
+        show_11547245().then(() => {
+          energy = maxEnergy;
+          updateUI();
+          alert("🎉 Tabriklaymiz! Energiya to'ldirildi.");
+        }).catch((err) => {
+          console.log("Reklama yopildi yoki xatolik:", err);
+          energy = maxEnergy;
+          updateUI();
+        });
       } else {
-        window.open(SMART_LINK_URL, '_blank');
+        alert("Reklama hali yuklanmoqda, iltimos 3-5 soniya kuting va qayta bosing!");
       }
-
-      // Foydalanuvchi reklamani ko'rib [X] ni bosib botga qaytganda energiya to'ladi
-      setTimeout(() => {
-        energy = maxEnergy;
-        updateUI();
-        alert("🎉 Tabriklaymiz! Energiya to'ldirildi.");
-      }, 1500);
     }
 
     function buyMultitap() {
@@ -507,7 +506,7 @@
       if (tg && tg.openTelegramLink) {
         tg.openTelegramLink(shareUrl);
       } else {
-        window.open(shareUrl, '_blank']);
+        window.open(shareUrl, '_blank');
       }
     }
 
@@ -515,4 +514,5 @@
     setInterval(renderLeaderboard, 10000);
   </script>
 </body>
-</html>
+  </html>
+          

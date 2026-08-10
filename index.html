@@ -171,6 +171,34 @@
     .lb-rank { font-weight: bold; width: 35px; }
     .lb-name { flex: 1; text-align: left; margin-left: 8px; }
     .lb-score { color: #facc15; font-weight: bold; }
+
+    /* Reklama oyna dizayni (In-App Overlay) */
+    .ad-modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      z-index: 9999;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .ad-content {
+      width: 90%;
+      height: 80%;
+      background: #0f172a;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+    .ad-close-btn {
+      position: absolute;
+      top: 10px; right: 10px;
+      background: #ef4444; color: #fff;
+      border: none; padding: 8px 14px;
+      border-radius: 8px; font-weight: bold;
+      cursor: pointer; z-index: 10000;
+    }
   </style>
 </head>
 <body>
@@ -234,9 +262,17 @@
     <div class="lb-list" id="leaderboard-list"></div>
   </div>
 
+  <div class="ad-modal" id="adModal">
+    <button class="ad-close-btn" onclick="closeAdModal()">X Yopish</button>
+    <div class="ad-content">
+      <iframe id="adFrame" style="width:100%; height:100%; border:none;"></iframe>
+    </div>
+  </div>
+
   <script>
     const MONETAG_DIRECT_LINK = "https://omg10.com/4/11545859";
-    const BOT_USERNAME = "SMART_ARENA_RANK_BOT";
+    // 🎯 SHU YERDA TO'G'RI BOT LOGININGIZ O'RNATILDI
+    const BOT_USERNAME = "Stars_Miner_Webapp_Bot";
 
     const SUPABASE_URL = "https://hqjmcfaywfjwjqamyaik.supabase.co";
     const SUPABASE_KEY = "sb_publishable_uNElf3NVizJmJQc5DIWgEg___yFG_gu";
@@ -319,15 +355,15 @@
       localStorage.setItem('tap_energy_cost', energyCost);
     }
 
-    // ⚡ BOSISH BILAN DARHOL REYTING VA BALANS YANGILANADI
+    // Bosganda tezkor reyting yangilanishi
     coinBtn.addEventListener('click', (e) => {
       if (energy >= tapPower) {
         balance += tapPower;
         energy -= tapPower;
         
         updateUI();
-        updateLocalLeaderboard(); // Reytingni ekranda ZUDLIK BILAN o'zgartiradi
-        debouncedSync();          // Bazaga orqa fonda tezkor saqlaydi
+        updateLocalLeaderboard();
+        debouncedSync();
 
         const floatEl = document.createElement('div');
         floatEl.className = 'float-text';
@@ -349,18 +385,23 @@
       }
     }, 1500);
 
-    // 📱 REKLAMA CHROME'GA CHIQIB KETMASDAN TELEGRAM ICHIDA OCHILADI
+    // 📺 Reklamani mutlaqo o'yin ichida ochish
     function watchAdForBoost() {
-      if (MONETAG_DIRECT_LINK) {
-        if (tg && tg.openLink) {
-          // try_instant_view Telegram ilovasi ichidagi brauzerda ochishga majburlaydi
-          tg.openLink(MONETAG_DIRECT_LINK, { try_instant_view: true });
-        } else {
-          window.location.href = MONETAG_DIRECT_LINK;
-        }
+      if (tg && tg.openLink) {
+        // Telegram ichidagi brauzerda ochish
+        tg.openLink(MONETAG_DIRECT_LINK, { try_instant_view: true });
+      } else {
+        // Modal overlay orqali ochish
+        document.getElementById('adFrame').src = MONETAG_DIRECT_LINK;
+        document.getElementById('adModal').style.display = 'flex';
       }
       energy = maxEnergy;
       updateUI();
+    }
+
+    function closeAdModal() {
+      document.getElementById('adModal').style.display = 'none';
+      document.getElementById('adFrame').src = '';
     }
 
     function buyMultitap() {
@@ -390,7 +431,6 @@
       }
     }
 
-    // 🏆 Supabase'dan asosiy reytingni olish
     let cachedTopPlayers = [];
     async function renderLeaderboard() {
       const { data: topPlayers, error } = await supabaseClient
@@ -405,7 +445,6 @@
       }
     }
 
-    // Ekranda reytingni zudlik bilan qayta chizish
     function updateLocalLeaderboard() {
       let found = false;
       cachedTopPlayers.forEach(p => {
@@ -452,7 +491,6 @@
       }
     }
 
-    // Har safar bosilganda so'rov tiqilib qolmasligi uchun 1.5s ichida 1 marta saqlaydi
     let syncTimer;
     function debouncedSync() {
       clearTimeout(syncTimer);
@@ -484,10 +522,11 @@
       }
     }
 
+    // 🔗 TO'G'RI REFERRAL LINKI BILAN YUBORISH
     function shareGame() {
       const refLink = `https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
       const text = encodeURIComponent(`🎮 Telegram Stars Miner'da har oy Telegram Stars o'ynalyapti!\n\n⚡️ Mening havolam orqali kir va Bepul 500 TA TANGA bonus ol! 👇`);
-      const shareUrl = `https://t.me/share/url?url=${refLink}&text=${text}`;
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${text}`;
 
       if (tg && tg.openTelegramLink) {
         tg.openTelegramLink(shareUrl);
@@ -497,7 +536,7 @@
     }
 
     initUser();
-    setInterval(renderLeaderboard, 10000); // 10 soniyada umumiy reytingni Supabase'dan yangilaydi
+    setInterval(renderLeaderboard, 10000);
   </script>
 </body>
   </html>

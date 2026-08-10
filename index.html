@@ -206,7 +206,7 @@
 
     <div class="shop-container">
       <button class="btn btn-ad" id="adBtn" onclick="watchAdForBoost()">
-        ⚡ Energiyani to'ldirish (Smart Link)
+        ⚡ Reklamani ko'rish va energiyani to'ldirish
       </button>
 
       <div class="btn-grid">
@@ -238,8 +238,8 @@
   <script>
     const BOT_USERNAME = "Stars_Miner_Webapp_Bot";
 
-    // Monetag Smart Link (Direct Link) manzilingizni shu yerga qo'ying:
-    const SMART_LINK_URL = "https://www.highcpmgate.com/YOUR_SMART_LINK_ID"; 
+    // Monetag Direct Link (Smart Link) manzilingizni shu yerga qo'ying:
+    const SMART_LINK_URL = "https://www.highcpmgate.com/YOUR_SMART_LINK_ID";
 
     const SUPABASE_URL = "https://hqjmcfaywfjwjqamyaik.supabase.co";
     const SUPABASE_KEY = "sb_publishable_uNElf3NVizJmJQc5DIWgEg___yFG_gu";
@@ -349,7 +349,7 @@
 
         setTimeout(() => floatEl.remove(), 800);
       } else {
-        alert("⚡ Energiyangiz tugadi! Reklama havolasini ochib energiyani to'ldiring.");
+        alert("⚡ Energiyangiz tugadi! Reklama tugmasini bosing.");
       }
     });
 
@@ -360,21 +360,21 @@
       }
     }, 1500);
 
-    // 🔗 SMART LINK (DIRECT LINK) REKLama FUNKSIYASI
+    // 🎬 SMART LINK / DIRECT LINK ORQALI REKLAMA OCHISH
     function watchAdForBoost() {
-      // Reklama havolasini yangi oynada ochamiz
+      // Telegram ichida maxsus oynada reklamani ochish (yuqorida [X] tugmasi bo'ladi)
       if (tg && tg.openLink) {
-        tg.openLink(SMART_LINK_URL);
+        tg.openLink(SMART_LINK_URL, { try_instant_view: false });
       } else {
         window.open(SMART_LINK_URL, '_blank');
       }
 
-      // Foydalanuvchiga energiyasini qo'shib beramiz
+      // Foydalanuvchi reklamani ko'rib [X] ni bosib botga qaytganda energiya to'ladi
       setTimeout(() => {
         energy = maxEnergy;
         updateUI();
-        alert("🎉 Tabriklaymiz! Reklama havolasi ochildi va energiya to'ldirildi.");
-      }, 1000);
+        alert("🎉 Tabriklaymiz! Energiya to'ldirildi.");
+      }, 1500);
     }
 
     function buyMultitap() {
@@ -507,7 +507,7 @@
       if (tg && tg.openTelegramLink) {
         tg.openTelegramLink(shareUrl);
       } else {
-        window.open(shareUrl, '_blank');
+        window.open(shareUrl, '_blank']);
       }
     }
 

@@ -229,16 +229,15 @@
   <div class="leaderboard-box">
     <div class="lb-header">
       <span>🏆 Top O'yinchilar (Oylik)</span>
-      <span style="font-size: 10px; color: #94a3b8;">Jonli reyting</span>
+      <span style="font-size: 10px; color: #38bdf8;">⚡ Jonli reyting</span>
     </div>
     <div class="lb-list" id="leaderboard-list"></div>
   </div>
 
   <script>
-    const MONETAG_DIRECT_LINK = "Https://omg10.com/4/11545859";
+    const MONETAG_DIRECT_LINK = "https://omg10.com/4/11545859";
     const BOT_USERNAME = "SMART_ARENA_RANK_BOT";
 
-    // 🔑 SIZNING TAYYOR SUPABASE SOZLAMALARIZ
     const SUPABASE_URL = "https://hqjmcfaywfjwjqamyaik.supabase.co";
     const SUPABASE_KEY = "sb_publishable_uNElf3NVizJmJQc5DIWgEg___yFG_gu";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -255,7 +254,6 @@
 
     document.getElementById("user-display").innerText = `${tgUser}, sizning balansingiz:`;
 
-    // LocalStorage ma'lumotlari
     let balance = parseInt(localStorage.getItem('tap_balance')) || 0;
     let energy = parseInt(localStorage.getItem('tap_energy')) || 100;
     let maxEnergy = parseInt(localStorage.getItem('tap_max_energy')) || 100;
@@ -268,7 +266,6 @@
     const energyFillEl = document.getElementById('energy-fill');
     const coinBtn = document.getElementById('coin');
 
-    // Supabase va Referral Tizimi
     async function initUser() {
       let { data, error } = await supabaseClient
         .from('stars_miner_users')
@@ -277,10 +274,8 @@
         .maybeSingle();
 
       if (data) {
-        // Supabase'dagi balans ustunroq
         balance = data.balance || 0;
       } else {
-        // Yangi foydalanuvchi: Link orqali kirgan bo'lsa 500 bonus
         let refId = null;
         if (startParam) {
           let cleanRef = startParam.replace('ref_', '');
@@ -290,7 +285,6 @@
         let initialBalance = (refId && refId !== userId) ? 500 : 0;
         balance = initialBalance;
 
-        // Bazaga yangi foydalanuvchini kiritish
         await supabaseClient.from('stars_miner_users').insert([
           { 
             telegram_id: userId, 
@@ -300,7 +294,6 @@
           }
         ]);
 
-        // Taklif qilgan foydalanuvchiga 500 bonus
         if (refId && refId !== userId) {
           await giveRefBonus(refId);
         }
@@ -326,12 +319,15 @@
       localStorage.setItem('tap_energy_cost', energyCost);
     }
 
-    // Kliker funksiyasi
+    // ⚡ BOSISH BILAN DARHOL REYTING VA BALANS YANGILANADI
     coinBtn.addEventListener('click', (e) => {
       if (energy >= tapPower) {
         balance += tapPower;
         energy -= tapPower;
+        
         updateUI();
+        updateLocalLeaderboard(); // Reytingni ekranda ZUDLIK BILAN o'zgartiradi
+        debouncedSync();          // Bazaga orqa fonda tezkor saqlaydi
 
         const floatEl = document.createElement('div');
         floatEl.className = 'float-text';
@@ -346,7 +342,6 @@
       }
     });
 
-    // Avto Energiya Tiklanishi
     setInterval(() => {
       if (energy < maxEnergy) {
         energy += 1;
@@ -354,20 +349,20 @@
       }
     }, 1500);
 
-    // Reklama Ko'rish
+    // 📱 REKLAMA CHROME'GA CHIQIB KETMASDAN TELEGRAM ICHIDA OCHILADI
     function watchAdForBoost() {
       if (MONETAG_DIRECT_LINK) {
         if (tg && tg.openLink) {
-          tg.openLink(MONETAG_DIRECT_LINK);
+          // try_instant_view Telegram ilovasi ichidagi brauzerda ochishga majburlaydi
+          tg.openLink(MONETAG_DIRECT_LINK, { try_instant_view: true });
         } else {
-          window.open(MONETAG_DIRECT_LINK, '_blank');
+          window.location.href = MONETAG_DIRECT_LINK;
         }
       }
       energy = maxEnergy;
       updateUI();
     }
 
-    // Upgradelar
     function buyMultitap() {
       if (balance >= multitapCost) {
         balance -= multitapCost;
@@ -375,6 +370,7 @@
         multitapCost = Math.floor(multitapCost * 2);
         updateUI();
         syncBalance();
+        updateLocalLeaderboard();
       } else {
         alert("❌ Tangalaringiz yetarli emas!");
       }
@@ -388,27 +384,46 @@
         energyCost = Math.floor(energyCost * 1.8);
         updateUI();
         syncBalance();
+        updateLocalLeaderboard();
       } else {
         alert("❌ Tangalaringiz yetarli emas!");
       }
     }
 
-    // Reyting Ko'rsatish
+    // 🏆 Supabase'dan asosiy reytingni olish
+    let cachedTopPlayers = [];
     async function renderLeaderboard() {
-      const listEl = document.getElementById('leaderboard-list');
-      if (!listEl) return;
-
       const { data: topPlayers, error } = await supabaseClient
         .from('stars_miner_users')
         .select('first_name, balance')
         .order('balance', { ascending: false })
         .limit(10);
 
-      if (error || !topPlayers) return;
+      if (!error && topPlayers) {
+        cachedTopPlayers = topPlayers;
+        drawLeaderboardUI();
+      }
+    }
 
+    // Ekranda reytingni zudlik bilan qayta chizish
+    function updateLocalLeaderboard() {
+      let found = false;
+      cachedTopPlayers.forEach(p => {
+        if (p.first_name === tgUser) {
+          p.balance = balance;
+          found = true;
+        }
+      });
+      cachedTopPlayers.sort((a, b) => b.balance - a.balance);
+      drawLeaderboardUI();
+    }
+
+    function drawLeaderboardUI() {
+      const listEl = document.getElementById('leaderboard-list');
+      if (!listEl) return;
       listEl.innerHTML = "";
 
-      topPlayers.forEach((player, index) => {
+      cachedTopPlayers.forEach((player, index) => {
         const item = document.createElement('div');
         item.className = 'lb-item';
         let medal = `#${index + 1}`;
@@ -424,7 +439,7 @@
         listEl.appendChild(item);
       });
 
-      const isInTop10 = topPlayers.some(p => p.first_name === tgUser);
+      const isInTop10 = cachedTopPlayers.some(p => p.first_name === tgUser);
       if (!isInTop10) {
         const myRankItem = document.createElement('div');
         myRankItem.className = 'lb-item my-rank';
@@ -437,7 +452,13 @@
       }
     }
 
-    // Balansni Supabase'ga Avto-saqlash
+    // Har safar bosilganda so'rov tiqilib qolmasligi uchun 1.5s ichida 1 marta saqlaydi
+    let syncTimer;
+    function debouncedSync() {
+      clearTimeout(syncTimer);
+      syncTimer = setTimeout(syncBalance, 1500);
+    }
+
     async function syncBalance() {
       if (userId && userId !== 9999999) {
         await supabaseClient
@@ -447,7 +468,6 @@
       }
     }
 
-    // Referal Taklif Yuboruvchiga Bonus Berish
     async function giveRefBonus(referrerId) {
       let { data } = await supabaseClient
         .from('stars_miner_users')
@@ -464,7 +484,6 @@
       }
     }
 
-    // Do'stlar bilan Ulashish (Referral)
     function shareGame() {
       const refLink = `https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
       const text = encodeURIComponent(`🎮 Telegram Stars Miner'da har oy Telegram Stars o'ynalyapti!\n\n⚡️ Mening havolam orqali kir va Bepul 500 TA TANGA bonus ol! 👇`);
@@ -477,10 +496,8 @@
       }
     }
 
-    // Ishga tushirish
     initUser();
-    setInterval(syncBalance, 4000); // Har 4 soniyada Supabase'ga saqlaydi
-    setInterval(renderLeaderboard, 15000); // Har 15 soniyada reytingni yangilaydi
+    setInterval(renderLeaderboard, 10000); // 10 soniyada umumiy reytingni Supabase'dan yangilaydi
   </script>
 </body>
   </html>

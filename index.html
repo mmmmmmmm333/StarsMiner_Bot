@@ -45,8 +45,9 @@
     .contest-desc {
       font-size: 10px;
       opacity: 0.95;
-      margin-top: 2px;
+      margin-top: 4px;
       color: #fef3c7;
+      line-height: 1.3;
     }
 
     .header {
@@ -155,7 +156,7 @@
     .btn-ad { background: linear-gradient(90deg, #eab308, #ca8a04); color: #000; grid-column: span 2; font-size: 12px; }
     .btn-upgrade { background: #334155; color: #fff; border: 1px solid rgba(255,255,255,0.1); }
     .btn-upgrade span { color: #facc15; font-size: 10px; margin-top: 2px; }
-    .btn-share { background: #22c55e; color: #fff; grid-column: span 2; }
+    .btn-share { background: #22c55e; color: #fff; grid-column: span 2; padding: 12px; font-size: 12px; }
 
     /* LEADERBOARD BO'LIMI */
     .leaderboard-box {
@@ -206,7 +207,10 @@
 
   <div class="contest-banner">
     <div class="contest-title">🌟 HAR OY TOP-10 UCHUN TELEGRAM STARS!</div>
-    <div class="contest-desc">Eng ko'p tanga yig'ib, Top-10 talikka kiring va har oy Yulduzchalarga ega bo'ling!</div>
+    <div class="contest-desc">
+      🥇 1-o'rin: 30 Stars | 🥈 2-o'rin: 20 Stars | 🥉 3-o'rin: 10 Stars<br>
+      4-10 o'rinlar: 5 Stars'dan! Tanga yig'ing va sovrin yuting!
+    </div>
   </div>
 
   <div class="header">
@@ -246,7 +250,9 @@
         </button>
       </div>
 
-      <button class="btn btn-share" onclick="shareGame()">📱 Do'stlarga Ulashish</button>
+      <button class="btn btn-share" onclick="shareGame()">
+        👥 Do'stingizni taklif qiling va 500 ta tanga oling!
+      </button>
     </div>
   </div>
 
@@ -262,16 +268,19 @@
     // ✅ Monetag Direct Link
     const MONETAG_DIRECT_LINK = "Https://omg10.com/4/11545859";
 
-    // ✅ Botingizning aniq Username'i
+    // ✅ Botingiz Username'i
     const BOT_USERNAME = "Stars_Miner_Webapp_Bot";
 
-    // Telegram SDK
     let tgUser = "O'yinchi";
+    let userId = "000000";
+
+    // Telegram SDK
     if (window.Telegram && window.Telegram.WebApp) {
       window.Telegram.WebApp.ready();
       window.Telegram.WebApp.expand();
       if (window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
         tgUser = window.Telegram.WebApp.initDataUnsafe.user.first_name || "O'yinchi";
+        userId = window.Telegram.WebApp.initDataUnsafe.user.id;
       }
     }
 
@@ -282,6 +291,21 @@
     
     let multitapCost = parseInt(localStorage.getItem('tap_multitap_cost')) || 100;
     let energyCost = parseInt(localStorage.getItem('tap_energy_cost')) || 150;
+
+    // --- TAKLIF QILINGAN BO'LSA 500 TANGA BONUS BERISH ---
+    let startParam = "";
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
+      startParam = window.Telegram.WebApp.initDataUnsafe.start_param || "";
+    }
+
+    if (startParam && startParam.startsWith("ref_")) {
+      const isAlreadyClaimed = localStorage.getItem('ref_bonus_claimed');
+      if (!isAlreadyClaimed) {
+        balance += 500;
+        localStorage.setItem('ref_bonus_claimed', 'true');
+        alert("🎉 Do'stingiz taklifi bilan kirdingiz! Sizga 500 ta bonus tanga berildi!");
+      }
+    }
 
     const balanceEl = document.getElementById('balance');
     const energyTextEl = document.getElementById('energy-text');
@@ -306,6 +330,7 @@
       renderLeaderboard();
     }
 
+    // Tanga bosish
     coinBtn.addEventListener('click', (e) => {
       if (energy >= tapPower) {
         balance += tapPower;
@@ -325,6 +350,7 @@
       }
     });
 
+    // Avto energiya tiklanishi
     setInterval(() => {
       if (energy < maxEnergy) {
         energy += 1;
@@ -332,9 +358,14 @@
       }
     }, 1500);
 
+    // REKLAMA (Telegram ichida ochiladi, Chrome'ga chiqib ketmaydi)
     function watchAdForBoost() {
       if (MONETAG_DIRECT_LINK) {
-        window.open(MONETAG_DIRECT_LINK, '_blank');
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink) {
+          window.Telegram.WebApp.openLink(MONETAG_DIRECT_LINK);
+        } else {
+          window.open(MONETAG_DIRECT_LINK, '_blank');
+        }
       }
       energy = maxEnergy;
       updateUI();
@@ -411,9 +442,11 @@
       }
     }
 
+    // REFERAL LINK ULASHISH (500 Tanga Bonus bilan)
     function shareGame() {
-      const text = encodeURIComponent(`🎮 Telegram Stars Miner'da har oy TOP-10 uchun Telegram Stars o'ynalyapti! Men ${balance} ta tanga yig'dim. Sen ham kir va Stars yut: `);
-      const shareUrl = `https://t.me/share/url?url=https://t.me/${BOT_USERNAME}&text=${text}`;
+      const refLink = `https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
+      const text = encodeURIComponent(`🎮 Telegram Stars Miner'da har oy Telegram Stars o'ynalyapti!\n\n⚡️ Mening havolam orqali kir va Bepul 500 TA TANGA bonus ol! 👇`);
+      const shareUrl = `https://t.me/share/url?url=${refLink}&text=${text}`;
 
       if (window.Telegram && window.Telegram.WebApp) {
         window.Telegram.WebApp.openTelegramLink(shareUrl);
@@ -425,4 +458,5 @@
     updateUI();
   </script>
 </body>
-</html>
+  </html>
+    

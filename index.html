@@ -171,54 +171,6 @@
     .lb-rank { font-weight: bold; width: 35px; }
     .lb-name { flex: 1; text-align: left; margin-left: 8px; }
     .lb-score { color: #facc15; font-weight: bold; }
-
-    /* 🛡️ REKLAMANI ILOVA ICHIDA USHLAB TURUVCHI MODAL DIZAYN */
-    .ad-modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(15, 23, 42, 0.95);
-      z-index: 99999;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 15px;
-    }
-    .ad-box {
-      width: 100%;
-      max-width: 380px;
-      height: 80vh;
-      background: #1e293b;
-      border-radius: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      position: relative;
-    }
-    .ad-header {
-      padding: 10px 15px;
-      background: #0f172a;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-      color: #facc15;
-    }
-    .ad-close-btn {
-      background: #ef4444;
-      color: #fff;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .ad-iframe {
-      flex: 1;
-      width: 100%;
-      border: none;
-    }
   </style>
 </head>
 <body>
@@ -282,16 +234,6 @@
     <div class="lb-list" id="leaderboard-list"></div>
   </div>
 
-  <div class="ad-modal" id="adModal">
-    <div class="ad-box">
-      <div class="ad-header">
-        <span>📺 Reklama tomosha qiling</span>
-        <button class="ad-close-btn" onclick="closeAdModal()">❌ Yopish</button>
-      </div>
-      <iframe class="ad-iframe" id="adFrame"></iframe>
-    </div>
-  </div>
-
   <script>
     const MONETAG_DIRECT_LINK = "https://omg10.com/4/11545859";
     const BOT_USERNAME = "Stars_Miner_Webapp_Bot";
@@ -324,7 +266,6 @@
     const energyFillEl = document.getElementById('energy-fill');
     const coinBtn = document.getElementById('coin');
 
-    // 👥 REFERRAL TIZIMI VA INTEGRATSIYA
     async function initUser() {
       if (!userId) {
         updateUI();
@@ -341,7 +282,6 @@
       if (data) {
         balance = data.balance || balance;
       } else {
-        // Referral ID aniqlash
         let refId = null;
         if (startParam) {
           let cleanRef = startParam.replace('ref_', '').trim();
@@ -354,7 +294,6 @@
         let initialBalance = refId ? 500 : 0;
         balance = initialBalance;
 
-        // Yangi foydalanuvchini Supabase'ga yaratish
         let { error: insertError } = await supabaseClient.from('stars_miner_users').insert([
           { 
             telegram_id: userId, 
@@ -364,7 +303,6 @@
           }
         ]);
 
-        // Referral egasiga +500 berish
         if (!insertError && refId) {
           await giveRefBonus(refId);
         }
@@ -419,25 +357,15 @@
       }
     }, 1500);
 
-    // 📺 Reklamani mutlaqo ilova ichida (Iframe overlay) ochish
+    // Telegram Telegram In-App Browser funksiyasi (Captchasiz va Chrome'siz)
     function watchAdForBoost() {
-      const modal = document.getElementById('adModal');
-      const frame = document.getElementById('adFrame');
-      
-      frame.src = MONETAG_DIRECT_LINK;
-      modal.style.display = 'flex';
-      
-      // Energiyani darhol to'ldirish
+      if (tg && tg.openLink) {
+        tg.openLink(MONETAG_DIRECT_LINK);
+      } else {
+        window.open(MONETAG_DIRECT_LINK, '_blank');
+      }
       energy = maxEnergy;
       updateUI();
-    }
-
-    function closeAdModal() {
-      const modal = document.getElementById('adModal');
-      const frame = document.getElementById('adFrame');
-      
-      frame.src = '';
-      modal.style.display = 'none';
     }
 
     function buyMultitap() {
@@ -542,7 +470,6 @@
       }
     }
 
-    // Taklif yuborgan odamga +500 qo'shish
     async function giveRefBonus(referrerId) {
       let { data } = await supabaseClient
         .from('stars_miner_users')
@@ -559,7 +486,6 @@
       }
     }
 
-    // Do'stlar bilan ulashish
     function shareGame() {
       if (!userId) {
         alert("Telegram ichidan kiring!");
@@ -581,4 +507,3 @@
   </script>
 </body>
 </html>
-

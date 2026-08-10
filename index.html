@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Telegram Stars Miner</title>
+
+  <script src="https://alwingulla.com/88/tag.min.js" data-zone="11547245" async data-cfasync="false"></script>
+
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -204,7 +207,7 @@
     </div>
 
     <div class="shop-container">
-      <button class="btn btn-ad" onclick="watchAdForBoost()">
+      <button class="btn btn-ad" id="adBtn" onclick="watchAdForBoost()">
         ⚡ Energiyani to'ldirish (Reklama)
       </button>
 
@@ -235,7 +238,6 @@
   </div>
 
   <script>
-    const MONETAG_DIRECT_LINK = "https://omg10.com/4/11545859";
     const BOT_USERNAME = "Stars_Miner_Webapp_Bot";
 
     const SUPABASE_URL = "https://hqjmcfaywfjwjqamyaik.supabase.co";
@@ -357,15 +359,31 @@
       }
     }, 1500);
 
-    // Telegram Telegram In-App Browser funksiyasi (Captchasiz va Chrome'siz)
+    // 🎬 MONETAG REKLAMA FUNKSIYASI
     function watchAdForBoost() {
-      if (tg && tg.openLink) {
-        tg.openLink(MONETAG_DIRECT_LINK);
+      if (typeof show_11547245 === 'function') {
+        show_11547245({
+          type: 'inApp',
+          inAppSettings: {
+            frequency: 2,
+            capping: 0.1,
+            interval: 30,
+            timeout: 5,
+            everyPage: false
+          }
+        }).then(() => {
+          energy = maxEnergy;
+          updateUI();
+          alert("🎉 Reklama ko'rildi! Energiya to'liq to'ldirildi.");
+        }).catch((err) => {
+          energy = maxEnergy;
+          updateUI();
+        });
       } else {
-        window.open(MONETAG_DIRECT_LINK, '_blank');
+        energy = maxEnergy;
+        updateUI();
+        alert("⚡ Energiya to'ldirildi!");
       }
-      energy = maxEnergy;
-      updateUI();
     }
 
     function buyMultitap() {
@@ -506,4 +524,5 @@
     setInterval(renderLeaderboard, 10000);
   </script>
 </body>
-</html>
+  </html>
+  

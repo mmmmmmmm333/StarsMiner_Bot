@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Telegram Stars Miner</title>
 
-  <script src="https://alwingulla.com/88/tag.min.js" data-zone="11547245" async data-cfasync="false"></script>
-
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -208,7 +206,7 @@
 
     <div class="shop-container">
       <button class="btn btn-ad" id="adBtn" onclick="watchAdForBoost()">
-        ⚡ Energiyani to'ldirish (Reklama)
+        ⚡ Energiyani to'ldirish (Smart Link)
       </button>
 
       <div class="btn-grid">
@@ -239,6 +237,9 @@
 
   <script>
     const BOT_USERNAME = "Stars_Miner_Webapp_Bot";
+
+    // Monetag Smart Link (Direct Link) manzilingizni shu yerga qo'ying:
+    const SMART_LINK_URL = "https://www.highcpmgate.com/YOUR_SMART_LINK_ID"; 
 
     const SUPABASE_URL = "https://hqjmcfaywfjwjqamyaik.supabase.co";
     const SUPABASE_KEY = "sb_publishable_uNElf3NVizJmJQc5DIWgEg___yFG_gu";
@@ -348,7 +349,7 @@
 
         setTimeout(() => floatEl.remove(), 800);
       } else {
-        alert("⚡ Energiyangiz tugadi! Reklama ko'rib energiyani to'ldiring.");
+        alert("⚡ Energiyangiz tugadi! Reklama havolasini ochib energiyani to'ldiring.");
       }
     });
 
@@ -359,25 +360,21 @@
       }
     }, 1500);
 
-    // 🎬 MONETAG REWARDED INTERSTITIAL FUNKSIYASI (587-rasmdagi kod asosida)
+    // 🔗 SMART LINK (DIRECT LINK) REKLama FUNKSIYASI
     function watchAdForBoost() {
-      if (typeof show_11547245 === 'function') {
-        show_11547245().then(() => {
-          // Reklama oxirigacha ko'rildi - energiyani to'ldiramiz
-          energy = maxEnergy;
-          updateUI();
-          alert("🎉 Tabriklaymiz! Energiya to'ldirildi.");
-        }).catch((err) => {
-          console.log("Reklama yopildi yoki xatolik:", err);
-          // Captcha yoki boshqa sababli reklama yopilsa ham o'yin qotib qolmasligi uchun:
-          energy = maxEnergy;
-          updateUI();
-        });
+      // Reklama havolasini yangi oynada ochamiz
+      if (tg && tg.openLink) {
+        tg.openLink(SMART_LINK_URL);
       } else {
+        window.open(SMART_LINK_URL, '_blank');
+      }
+
+      // Foydalanuvchiga energiyasini qo'shib beramiz
+      setTimeout(() => {
         energy = maxEnergy;
         updateUI();
-        alert("⚡ Energiya to'ldirildi!");
-      }
+        alert("🎉 Tabriklaymiz! Reklama havolasi ochildi va energiya to'ldirildi.");
+      }, 1000);
     }
 
     function buyMultitap() {
@@ -518,5 +515,4 @@
     setInterval(renderLeaderboard, 10000);
   </script>
 </body>
-  </html>
-  
+</html>

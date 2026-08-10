@@ -172,32 +172,52 @@
     .lb-name { flex: 1; text-align: left; margin-left: 8px; }
     .lb-score { color: #facc15; font-weight: bold; }
 
-    /* Reklama oyna dizayni (In-App Overlay) */
+    /* 🛡️ REKLAMANI ILOVA ICHIDA USHLAB TURUVCHI MODAL DIZAYN */
     .ad-modal {
       display: none;
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.85);
-      z-index: 9999;
+      background: rgba(15, 23, 42, 0.95);
+      z-index: 99999;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      padding: 15px;
     }
-    .ad-content {
-      width: 90%;
-      height: 80%;
-      background: #0f172a;
-      border-radius: 12px;
+    .ad-box {
+      width: 100%;
+      max-width: 380px;
+      height: 80vh;
+      background: #1e293b;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      flex-direction: column;
       overflow: hidden;
       position: relative;
     }
+    .ad-header {
+      padding: 10px 15px;
+      background: #0f172a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: #facc15;
+    }
     .ad-close-btn {
-      position: absolute;
-      top: 10px; right: 10px;
-      background: #ef4444; color: #fff;
-      border: none; padding: 8px 14px;
-      border-radius: 8px; font-weight: bold;
-      cursor: pointer; z-index: 10000;
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .ad-iframe {
+      flex: 1;
+      width: 100%;
+      border: none;
     }
   </style>
 </head>
@@ -263,15 +283,17 @@
   </div>
 
   <div class="ad-modal" id="adModal">
-    <button class="ad-close-btn" onclick="closeAdModal()">X Yopish</button>
-    <div class="ad-content">
-      <iframe id="adFrame" style="width:100%; height:100%; border:none;"></iframe>
+    <div class="ad-box">
+      <div class="ad-header">
+        <span>📺 Reklama tomosha qiling</span>
+        <button class="ad-close-btn" onclick="closeAdModal()">❌ Yopish</button>
+      </div>
+      <iframe class="ad-iframe" id="adFrame"></iframe>
     </div>
   </div>
 
   <script>
     const MONETAG_DIRECT_LINK = "https://omg10.com/4/11545859";
-    // 🎯 SHU YERDA TO'G'RI BOT LOGININGIZ O'RNATILDI
     const BOT_USERNAME = "Stars_Miner_Webapp_Bot";
 
     const SUPABASE_URL = "https://hqjmcfaywfjwjqamyaik.supabase.co";
@@ -285,7 +307,7 @@
     }
 
     const tgUser = tg?.initDataUnsafe?.user?.first_name || "O'yinchi";
-    const userId = tg?.initDataUnsafe?.user?.id || 9999999;
+    const userId = tg?.initDataUnsafe?.user?.id || null;
     const startParam = tg?.initDataUnsafe?.start_param || null;
 
     document.getElementById("user-display").innerText = `${tgUser}, sizning balansingiz:`;
@@ -302,7 +324,14 @@
     const energyFillEl = document.getElementById('energy-fill');
     const coinBtn = document.getElementById('coin');
 
+    // 👥 REFERRAL TIZIMI VA INTEGRATSIYA
     async function initUser() {
+      if (!userId) {
+        updateUI();
+        renderLeaderboard();
+        return;
+      }
+
       let { data, error } = await supabaseClient
         .from('stars_miner_users')
         .select('*')
@@ -310,18 +339,23 @@
         .maybeSingle();
 
       if (data) {
-        balance = data.balance || 0;
+        balance = data.balance || balance;
       } else {
+        // Referral ID aniqlash
         let refId = null;
         if (startParam) {
-          let cleanRef = startParam.replace('ref_', '');
-          refId = parseInt(cleanRef);
+          let cleanRef = startParam.replace('ref_', '').trim();
+          let parsedId = parseInt(cleanRef);
+          if (!isNaN(parsedId) && parsedId !== userId) {
+            refId = parsedId;
+          }
         }
 
-        let initialBalance = (refId && refId !== userId) ? 500 : 0;
+        let initialBalance = refId ? 500 : 0;
         balance = initialBalance;
 
-        await supabaseClient.from('stars_miner_users').insert([
+        // Yangi foydalanuvchini Supabase'ga yaratish
+        let { error: insertError } = await supabaseClient.from('stars_miner_users').insert([
           { 
             telegram_id: userId, 
             first_name: tgUser, 
@@ -330,7 +364,8 @@
           }
         ]);
 
-        if (refId && refId !== userId) {
+        // Referral egasiga +500 berish
+        if (!insertError && refId) {
           await giveRefBonus(refId);
         }
       }
@@ -355,7 +390,6 @@
       localStorage.setItem('tap_energy_cost', energyCost);
     }
 
-    // Bosganda tezkor reyting yangilanishi
     coinBtn.addEventListener('click', (e) => {
       if (energy >= tapPower) {
         balance += tapPower;
@@ -385,23 +419,25 @@
       }
     }, 1500);
 
-    // 📺 Reklamani mutlaqo o'yin ichida ochish
+    // 📺 Reklamani mutlaqo ilova ichida (Iframe overlay) ochish
     function watchAdForBoost() {
-      if (tg && tg.openLink) {
-        // Telegram ichidagi brauzerda ochish
-        tg.openLink(MONETAG_DIRECT_LINK, { try_instant_view: true });
-      } else {
-        // Modal overlay orqali ochish
-        document.getElementById('adFrame').src = MONETAG_DIRECT_LINK;
-        document.getElementById('adModal').style.display = 'flex';
-      }
+      const modal = document.getElementById('adModal');
+      const frame = document.getElementById('adFrame');
+      
+      frame.src = MONETAG_DIRECT_LINK;
+      modal.style.display = 'flex';
+      
+      // Energiyani darhol to'ldirish
       energy = maxEnergy;
       updateUI();
     }
 
     function closeAdModal() {
-      document.getElementById('adModal').style.display = 'none';
-      document.getElementById('adFrame').src = '';
+      const modal = document.getElementById('adModal');
+      const frame = document.getElementById('adFrame');
+      
+      frame.src = '';
+      modal.style.display = 'none';
     }
 
     function buyMultitap() {
@@ -498,7 +534,7 @@
     }
 
     async function syncBalance() {
-      if (userId && userId !== 9999999) {
+      if (userId) {
         await supabaseClient
           .from('stars_miner_users')
           .update({ balance: balance })
@@ -506,12 +542,13 @@
       }
     }
 
+    // Taklif yuborgan odamga +500 qo'shish
     async function giveRefBonus(referrerId) {
       let { data } = await supabaseClient
         .from('stars_miner_users')
         .select('balance')
         .eq('telegram_id', referrerId)
-        .single();
+        .maybeSingle();
 
       if (data) {
         let newBal = (data.balance || 0) + 500;
@@ -522,11 +559,15 @@
       }
     }
 
-    // 🔗 TO'G'RI REFERRAL LINKI BILAN YUBORISH
+    // Do'stlar bilan ulashish
     function shareGame() {
+      if (!userId) {
+        alert("Telegram ichidan kiring!");
+        return;
+      }
       const refLink = `https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
-      const text = encodeURIComponent(`🎮 Telegram Stars Miner'da har oy Telegram Stars o'ynalyapti!\n\n⚡️ Mening havolam orqali kir va Bepul 500 TA TANGA bonus ol! 👇`);
-      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${text}`;
+      const text = `🎮 Telegram Stars Miner'da har oy Telegram Stars o'ynalyapti!\n\n⚡️ Mening havolam orqali kir va Bepul 500 TA TANGA bonus ol! 👇`;
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(text)}`;
 
       if (tg && tg.openTelegramLink) {
         tg.openTelegramLink(shareUrl);
@@ -539,5 +580,5 @@
     setInterval(renderLeaderboard, 10000);
   </script>
 </body>
-  </html>
-  
+</html>
+

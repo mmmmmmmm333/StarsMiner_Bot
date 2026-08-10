@@ -359,7 +359,7 @@
       }
     }, 1500);
 
-    // 🎬 MONETAG REKLAMA FUNKSIYASI
+    // 🎬 MONETAG MINI APP REKLAMA FUNKSIYASI
     function watchAdForBoost() {
       if (typeof show_11547245 === 'function') {
         show_11547245({
@@ -376,6 +376,7 @@
           updateUI();
           alert("🎉 Reklama ko'rildi! Energiya to'liq to'ldirildi.");
         }).catch((err) => {
+          console.log("Monetag Ad error/close:", err);
           energy = maxEnergy;
           updateUI();
         });
@@ -524,5 +525,5 @@
     setInterval(renderLeaderboard, 10000);
   </script>
 </body>
-  </html>
+    </html>
   

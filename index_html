@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Telegram Stars Miner</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      overflow-y: auto;
+    }
+    
+    /* Top Stars Banner */
+    .contest-banner {
+      width: 90%;
+      max-width: 400px;
+      margin-top: 15px;
+      background: linear-gradient(90deg, #f59e0b 0%, #ec4899 100%);
+      padding: 10px 14px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .contest-title {
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #fff;
+    }
+    .contest-desc {
+      font-size: 10px;
+      opacity: 0.95;
+      margin-top: 2px;
+      color: #fef3c7;
+    }
+
+    .header {
+      margin-top: 10px;
+      text-align: center;
+    }
+    .balance-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 36px;
+      font-weight: 800;
+      color: #facc15;
+    }
+
+    .main-area {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      margin: 15px 0;
+    }
+    .coin-btn {
+      width: 190px;
+      height: 190px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fde047 0%, #ca8a04 100%);
+      box-shadow: 0 0 30px rgba(250, 204, 21, 0.4), inset 0 0 15px rgba(255, 255, 255, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 75px;
+      cursor: pointer;
+      transition: transform 0.08s ease;
+      border: 6px solid #fef08a;
+    }
+    .coin-btn:active {
+      transform: scale(0.92);
+    }
+    .float-text {
+      position: absolute;
+      font-size: 28px;
+      font-weight: bold;
+      color: #facc15;
+      pointer-events: none;
+      animation: floatUp 0.8s ease-out forwards;
+    }
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-80px) scale(1.2); }
+    }
+
+    /* Footer va Stats */
+    .footer-stats {
+      width: 90%;
+      max-width: 400px;
+      background: rgba(30, 41, 59, 0.9);
+      padding: 12px;
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 12px;
+    }
+    .energy-bar-bg {
+      width: 100%;
+      height: 10px;
+      background: #334155;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .energy-bar-fill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #38bdf8 0%, #3b82f6 100%);
+      transition: width 0.2s ease;
+    }
+    
+    .shop-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .btn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .btn {
+      padding: 10px 8px;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 11px;
+      transition: opacity 0.2s, transform 0.1s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn:active { transform: scale(0.96); opacity: 0.9; }
+    .btn-ad { background: linear-gradient(90deg, #eab308, #ca8a04); color: #000; grid-column: span 2; font-size: 12px; }
+    .btn-upgrade { background: #334155; color: #fff; border: 1px solid rgba(255,255,255,0.1); }
+    .btn-upgrade span { color: #facc15; font-size: 10px; margin-top: 2px; }
+    .btn-share { background: #22c55e; color: #fff; grid-column: span 2; }
+
+    /* LEADERBOARD BO'LIMI */
+    .leaderboard-box {
+      width: 90%;
+      max-width: 400px;
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 16px;
+      padding: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 25px;
+    }
+    .lb-header {
+      font-size: 12px;
+      font-weight: 800;
+      color: #38bdf8;
+      text-transform: uppercase;
+      text-align: center;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .lb-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .lb-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1e293b;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+    }
+    .lb-item.my-rank {
+      background: #334155;
+      border: 1px dashed #facc15;
+      margin-top: 6px;
+    }
+    .lb-rank { font-weight: bold; width: 35px; }
+    .lb-name { flex: 1; text-align: left; margin-left: 8px; }
+    .lb-score { color: #facc15; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <div class="contest-banner">
+    <div class="contest-title">🌟 HAR OY TOP-10 UCHUN TELEGRAM STARS!</div>
+    <div class="contest-desc">Eng ko'p tanga yig'ib, Top-10 talikka kiring va har oy Yulduzchalarga ega bo'ling!</div>
+  </div>
+
+  <div class="header">
+    <div style="font-size: 12px; color: #94a3b8;">Sizning balansingiz:</div>
+    <div class="balance-container">
+      🪙 <span id="balance">0</span>
+    </div>
+  </div>
+
+  <div class="main-area">
+    <div class="coin-btn" id="coin">⚡</div>
+  </div>
+
+  <div class="footer-stats">
+    <div style="display: flex; justify-content: space-between; font-size: 12px;">
+      <span>⚡ Energiya:</span>
+      <span id="energy-text">100 / 100</span>
+    </div>
+    <div class="energy-bar-bg">
+      <div class="energy-bar-fill" id="energy-fill"></div>
+    </div>
+
+    <div class="shop-container">
+      <button class="btn btn-ad" onclick="watchAdForBoost()">
+        ⚡ Energiyani to'ldirish (Reklama)
+      </button>
+
+      <div class="btn-grid">
+        <button class="btn btn-upgrade" onclick="buyMultitap()">
+          👆 Multitap (+1 Tap)
+          <span id="multitap-cost">💰 100 tanga</span>
+        </button>
+
+        <button class="btn btn-upgrade" onclick="buyEnergyLimit()">
+          🔋 Max Energiya (+50)
+          <span id="energy-cost">💰 150 tanga</span>
+        </button>
+      </div>
+
+      <button class="btn btn-share" onclick="shareGame()">📱 Do'stlarga Ulashish</button>
+    </div>
+  </div>
+
+  <div class="leaderboard-box">
+    <div class="lb-header">
+      <span>🏆 Top O'yinchilar (Oylik)</span>
+      <span style="font-size: 10px; color: #94a3b8;">Jonli reyting</span>
+    </div>
+    <div class="lb-list" id="leaderboard-list"></div>
+  </div>
+
+  <script>
+    // ✅ Monetag Direct Link
+    const MONETAG_DIRECT_LINK = "Https://omg10.com/4/11545859";
+
+    // ✅ Botingizning aniq Username'i
+    const BOT_USERNAME = "Stars_Miner_Webapp_Bot";
+
+    // Telegram SDK
+    let tgUser = "O'yinchi";
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+      if (window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
+        tgUser = window.Telegram.WebApp.initDataUnsafe.user.first_name || "O'yinchi";
+      }
+    }
+
+    let balance = parseInt(localStorage.getItem('tap_balance')) || 0;
+    let energy = parseInt(localStorage.getItem('tap_energy')) || 100;
+    let maxEnergy = parseInt(localStorage.getItem('tap_max_energy')) || 100;
+    let tapPower = parseInt(localStorage.getItem('tap_power')) || 1;
+    
+    let multitapCost = parseInt(localStorage.getItem('tap_multitap_cost')) || 100;
+    let energyCost = parseInt(localStorage.getItem('tap_energy_cost')) || 150;
+
+    const balanceEl = document.getElementById('balance');
+    const energyTextEl = document.getElementById('energy-text');
+    const energyFillEl = document.getElementById('energy-fill');
+    const coinBtn = document.getElementById('coin');
+
+    function updateUI() {
+      balanceEl.innerText = balance.toLocaleString();
+      energyTextEl.innerText = `${energy} / ${maxEnergy}`;
+      energyFillEl.style.width = `${(energy / maxEnergy) * 100}%`;
+      
+      document.getElementById('multitap-cost').innerText = `💰 ${multitapCost} tanga (+${tapPower})`;
+      document.getElementById('energy-cost').innerText = `💰 ${energyCost} tanga (${maxEnergy})`;
+
+      localStorage.setItem('tap_balance', balance);
+      localStorage.setItem('tap_energy', energy);
+      localStorage.setItem('tap_max_energy', maxEnergy);
+      localStorage.setItem('tap_power', tapPower);
+      localStorage.setItem('tap_multitap_cost', multitapCost);
+      localStorage.setItem('tap_energy_cost', energyCost);
+
+      renderLeaderboard();
+    }
+
+    coinBtn.addEventListener('click', (e) => {
+      if (energy >= tapPower) {
+        balance += tapPower;
+        energy -= tapPower;
+        updateUI();
+
+        const floatEl = document.createElement('div');
+        floatEl.className = 'float-text';
+        floatEl.innerText = `+${tapPower}`;
+        floatEl.style.left = `${e.clientX - 15}px`;
+        floatEl.style.top = `${e.clientY - 30}px`;
+        document.body.appendChild(floatEl);
+
+        setTimeout(() => floatEl.remove(), 800);
+      } else {
+        alert("⚡ Energiyangiz tugadi! Pastdagi reklama tugmasini bosib energiyani to'ldiring.");
+      }
+    });
+
+    setInterval(() => {
+      if (energy < maxEnergy) {
+        energy += 1;
+        updateUI();
+      }
+    }, 1500);
+
+    function watchAdForBoost() {
+      if (MONETAG_DIRECT_LINK) {
+        window.open(MONETAG_DIRECT_LINK, '_blank');
+      }
+      energy = maxEnergy;
+      updateUI();
+    }
+
+    function buyMultitap() {
+      if (balance >= multitapCost) {
+        balance -= multitapCost;
+        tapPower += 1;
+        multitapCost = Math.floor(multitapCost * 2);
+        updateUI();
+      } else {
+        alert("❌ Tangalaringiz yetarli emas!");
+      }
+    }
+
+    function buyEnergyLimit() {
+      if (balance >= energyCost) {
+        balance -= energyCost;
+        maxEnergy += 50;
+        energy = maxEnergy;
+        energyCost = Math.floor(energyCost * 1.8);
+        updateUI();
+      } else {
+        alert("❌ Tangalaringiz yetarli emas!");
+      }
+    }
+
+    function renderLeaderboard() {
+      const listEl = document.getElementById('leaderboard-list');
+      
+      let topPlayers = [
+        { name: "Jasur_777", score: 150000 },
+        { name: "Sardor_Dev", score: 98000 },
+        { name: "Madina_Smart", score: 75000 },
+        { name: "Ali_Pro", score: 52000 },
+        { name: "Bekzod_O", score: 40000 }
+      ];
+
+      const topCutoffScore = 40000; 
+      listEl.innerHTML = "";
+
+      topPlayers.forEach((player, index) => {
+        const item = document.createElement('div');
+        item.className = 'lb-item';
+        
+        let medal = `#${index + 1}`;
+        if (index === 0) medal = "🥇";
+        if (index === 1) medal = "🥈";
+        if (index === 2) medal = "🥉";
+
+        item.innerHTML = `
+          <span class="lb-rank">${medal}</span>
+          <span class="lb-name">${player.name}</span>
+          <span class="lb-score">🪙 ${player.score.toLocaleString()}</span>
+        `;
+        listEl.appendChild(item);
+      });
+
+      if (balance < topCutoffScore) {
+        const myRankItem = document.createElement('div');
+        myRankItem.className = 'lb-item my-rank';
+
+        let estimatedRank = "1000+";
+        if (balance < 5000) estimatedRank = "2000+";
+        else if (balance < 15000) estimatedRank = "1500+";
+
+        myRankItem.innerHTML = `
+          <span class="lb-rank" style="font-size: 10px; color: #facc15;">#${estimatedRank}</span>
+          <span class="lb-name">${tgUser} (Siz)</span>
+          <span class="lb-score">🪙 ${balance.toLocaleString()}</span>
+        `;
+        listEl.appendChild(myRankItem);
+      }
+    }
+
+    function shareGame() {
+      const text = encodeURIComponent(`🎮 Telegram Stars Miner'da har oy TOP-10 uchun Telegram Stars o'ynalyapti! Men ${balance} ta tanga yig'dim. Sen ham kir va Stars yut: `);
+      const shareUrl = `https://t.me/share/url?url=https://t.me/${BOT_USERNAME}&text=${text}`;
+
+      if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.openTelegramLink(shareUrl);
+      } else {
+        window.open(shareUrl, '_blank');
+      }
+    }
+
+    updateUI();
+  </script>
+</body>
+</html>

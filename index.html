@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Telegram Stars Miner</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -23,8 +24,6 @@
       min-height: 100vh;
       overflow-y: auto;
     }
-    
-    /* Top Stars Banner */
     .contest-banner {
       width: 90%;
       max-width: 400px;
@@ -49,11 +48,7 @@
       color: #fef3c7;
       line-height: 1.3;
     }
-
-    .header {
-      margin-top: 10px;
-      text-align: center;
-    }
+    .header { margin-top: 10px; text-align: center; }
     .balance-container {
       display: flex;
       align-items: center;
@@ -63,7 +58,6 @@
       font-weight: 800;
       color: #facc15;
     }
-
     .main-area {
       position: relative;
       display: flex;
@@ -86,9 +80,7 @@
       transition: transform 0.08s ease;
       border: 6px solid #fef08a;
     }
-    .coin-btn:active {
-      transform: scale(0.92);
-    }
+    .coin-btn:active { transform: scale(0.92); }
     .float-text {
       position: absolute;
       font-size: 28px;
@@ -101,8 +93,6 @@
       0% { opacity: 1; transform: translateY(0) scale(1); }
       100% { opacity: 0; transform: translateY(-80px) scale(1.2); }
     }
-
-    /* Footer va Stats */
     .footer-stats {
       width: 90%;
       max-width: 400px;
@@ -127,18 +117,8 @@
       background: linear-gradient(90deg, #38bdf8 0%, #3b82f6 100%);
       transition: width 0.2s ease;
     }
-    
-    .shop-container {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 10px;
-    }
-    .btn-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
+    .shop-container { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .btn {
       padding: 10px 8px;
       border: none;
@@ -157,8 +137,6 @@
     .btn-upgrade { background: #334155; color: #fff; border: 1px solid rgba(255,255,255,0.1); }
     .btn-upgrade span { color: #facc15; font-size: 10px; margin-top: 2px; }
     .btn-share { background: #22c55e; color: #fff; grid-column: span 2; padding: 12px; font-size: 12px; }
-
-    /* LEADERBOARD BO'LIMI */
     .leaderboard-box {
       width: 90%;
       max-width: 400px;
@@ -179,11 +157,7 @@
       justify-content: space-between;
       align-items: center;
     }
-    .lb-list {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+    .lb-list { display: flex; flex-direction: column; gap: 6px; }
     .lb-item {
       display: flex;
       justify-content: space-between;
@@ -193,11 +167,7 @@
       border-radius: 8px;
       font-size: 12px;
     }
-    .lb-item.my-rank {
-      background: #334155;
-      border: 1px dashed #facc15;
-      margin-top: 6px;
-    }
+    .lb-item.my-rank { background: #334155; border: 1px dashed #facc15; margin-top: 6px; }
     .lb-rank { font-weight: bold; width: 35px; }
     .lb-name { flex: 1; text-align: left; margin-left: 8px; }
     .lb-score { color: #facc15; font-weight: bold; }
@@ -214,7 +184,7 @@
   </div>
 
   <div class="header">
-    <div style="font-size: 12px; color: #94a3b8;">Sizning balansingiz:</div>
+    <div style="font-size: 12px; color: #94a3b8;" id="user-display">Sizning balansingiz:</div>
     <div class="balance-container">
       🪙 <span id="balance">0</span>
     </div>
@@ -265,52 +235,80 @@
   </div>
 
   <script>
-    // ✅ Monetag Direct Link
     const MONETAG_DIRECT_LINK = "Https://omg10.com/4/11545859";
+    const BOT_USERNAME = "SMART_ARENA_RANK_BOT";
 
-    // ✅ Botingiz Username'i
-    const BOT_USERNAME = "Stars_Miner_Webapp_Bot";
+    // 🔑 SIZNING TAYYOR SUPABASE SOZLAMALARIZ
+    const SUPABASE_URL = "https://hqjmcfaywfjwjqamyaik.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_uNElf3NVizJmJQc5DIWgEg___yFG_gu";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let tgUser = "O'yinchi";
-    let userId = "000000";
-
-    // Telegram SDK
-    if (window.Telegram && window.Telegram.WebApp) {
-      window.Telegram.WebApp.ready();
-      window.Telegram.WebApp.expand();
-      if (window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
-        tgUser = window.Telegram.WebApp.initDataUnsafe.user.first_name || "O'yinchi";
-        userId = window.Telegram.WebApp.initDataUnsafe.user.id;
-      }
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
     }
 
+    const tgUser = tg?.initDataUnsafe?.user?.first_name || "O'yinchi";
+    const userId = tg?.initDataUnsafe?.user?.id || 9999999;
+    const startParam = tg?.initDataUnsafe?.start_param || null;
+
+    document.getElementById("user-display").innerText = `${tgUser}, sizning balansingiz:`;
+
+    // LocalStorage ma'lumotlari
     let balance = parseInt(localStorage.getItem('tap_balance')) || 0;
     let energy = parseInt(localStorage.getItem('tap_energy')) || 100;
     let maxEnergy = parseInt(localStorage.getItem('tap_max_energy')) || 100;
     let tapPower = parseInt(localStorage.getItem('tap_power')) || 1;
-    
     let multitapCost = parseInt(localStorage.getItem('tap_multitap_cost')) || 100;
     let energyCost = parseInt(localStorage.getItem('tap_energy_cost')) || 150;
-
-    // --- TAKLIF QILINGAN BO'LSA 500 TANGA BONUS BERISH ---
-    let startParam = "";
-    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
-      startParam = window.Telegram.WebApp.initDataUnsafe.start_param || "";
-    }
-
-    if (startParam && startParam.startsWith("ref_")) {
-      const isAlreadyClaimed = localStorage.getItem('ref_bonus_claimed');
-      if (!isAlreadyClaimed) {
-        balance += 500;
-        localStorage.setItem('ref_bonus_claimed', 'true');
-        alert("🎉 Do'stingiz taklifi bilan kirdingiz! Sizga 500 ta bonus tanga berildi!");
-      }
-    }
 
     const balanceEl = document.getElementById('balance');
     const energyTextEl = document.getElementById('energy-text');
     const energyFillEl = document.getElementById('energy-fill');
     const coinBtn = document.getElementById('coin');
+
+    // Supabase va Referral Tizimi
+    async function initUser() {
+      let { data, error } = await supabaseClient
+        .from('stars_miner_users')
+        .select('*')
+        .eq('telegram_id', userId)
+        .maybeSingle();
+
+      if (data) {
+        // Supabase'dagi balans ustunroq
+        balance = data.balance || 0;
+      } else {
+        // Yangi foydalanuvchi: Link orqali kirgan bo'lsa 500 bonus
+        let refId = null;
+        if (startParam) {
+          let cleanRef = startParam.replace('ref_', '');
+          refId = parseInt(cleanRef);
+        }
+
+        let initialBalance = (refId && refId !== userId) ? 500 : 0;
+        balance = initialBalance;
+
+        // Bazaga yangi foydalanuvchini kiritish
+        await supabaseClient.from('stars_miner_users').insert([
+          { 
+            telegram_id: userId, 
+            first_name: tgUser, 
+            balance: initialBalance,
+            referred_by: refId
+          }
+        ]);
+
+        // Taklif qilgan foydalanuvchiga 500 bonus
+        if (refId && refId !== userId) {
+          await giveRefBonus(refId);
+        }
+      }
+
+      updateUI();
+      renderLeaderboard();
+    }
 
     function updateUI() {
       balanceEl.innerText = balance.toLocaleString();
@@ -326,11 +324,9 @@
       localStorage.setItem('tap_power', tapPower);
       localStorage.setItem('tap_multitap_cost', multitapCost);
       localStorage.setItem('tap_energy_cost', energyCost);
-
-      renderLeaderboard();
     }
 
-    // Tanga bosish
+    // Kliker funksiyasi
     coinBtn.addEventListener('click', (e) => {
       if (energy >= tapPower) {
         balance += tapPower;
@@ -346,11 +342,11 @@
 
         setTimeout(() => floatEl.remove(), 800);
       } else {
-        alert("⚡ Energiyangiz tugadi! Pastdagi reklama tugmasini bosib energiyani to'ldiring.");
+        alert("⚡ Energiyangiz tugadi! Reklama ko'rib energiyani to'ldiring.");
       }
     });
 
-    // Avto energiya tiklanishi
+    // Avto Energiya Tiklanishi
     setInterval(() => {
       if (energy < maxEnergy) {
         energy += 1;
@@ -358,11 +354,11 @@
       }
     }, 1500);
 
-    // REKLAMA (Telegram ichida ochiladi, Chrome'ga chiqib ketmaydi)
+    // Reklama Ko'rish
     function watchAdForBoost() {
       if (MONETAG_DIRECT_LINK) {
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink) {
-          window.Telegram.WebApp.openLink(MONETAG_DIRECT_LINK);
+        if (tg && tg.openLink) {
+          tg.openLink(MONETAG_DIRECT_LINK);
         } else {
           window.open(MONETAG_DIRECT_LINK, '_blank');
         }
@@ -371,12 +367,14 @@
       updateUI();
     }
 
+    // Upgradelar
     function buyMultitap() {
       if (balance >= multitapCost) {
         balance -= multitapCost;
         tapPower += 1;
         multitapCost = Math.floor(multitapCost * 2);
         updateUI();
+        syncBalance();
       } else {
         alert("❌ Tangalaringiz yetarli emas!");
       }
@@ -389,29 +387,30 @@
         energy = maxEnergy;
         energyCost = Math.floor(energyCost * 1.8);
         updateUI();
+        syncBalance();
       } else {
         alert("❌ Tangalaringiz yetarli emas!");
       }
     }
 
-    function renderLeaderboard() {
+    // Reyting Ko'rsatish
+    async function renderLeaderboard() {
       const listEl = document.getElementById('leaderboard-list');
-      
-      let topPlayers = [
-        { name: "Jasur_777", score: 150000 },
-        { name: "Sardor_Dev", score: 98000 },
-        { name: "Madina_Smart", score: 75000 },
-        { name: "Ali_Pro", score: 52000 },
-        { name: "Bekzod_O", score: 40000 }
-      ];
+      if (!listEl) return;
 
-      const topCutoffScore = 40000; 
+      const { data: topPlayers, error } = await supabaseClient
+        .from('stars_miner_users')
+        .select('first_name, balance')
+        .order('balance', { ascending: false })
+        .limit(10);
+
+      if (error || !topPlayers) return;
+
       listEl.innerHTML = "";
 
       topPlayers.forEach((player, index) => {
         const item = document.createElement('div');
         item.className = 'lb-item';
-        
         let medal = `#${index + 1}`;
         if (index === 0) medal = "🥇";
         if (index === 1) medal = "🥈";
@@ -419,44 +418,70 @@
 
         item.innerHTML = `
           <span class="lb-rank">${medal}</span>
-          <span class="lb-name">${player.name}</span>
-          <span class="lb-score">🪙 ${player.score.toLocaleString()}</span>
+          <span class="lb-name">${player.first_name || "O'yinchi"}</span>
+          <span class="lb-score">🪙 ${Number(player.balance).toLocaleString()}</span>
         `;
         listEl.appendChild(item);
       });
 
-      if (balance < topCutoffScore) {
+      const isInTop10 = topPlayers.some(p => p.first_name === tgUser);
+      if (!isInTop10) {
         const myRankItem = document.createElement('div');
         myRankItem.className = 'lb-item my-rank';
-
-        let estimatedRank = "1000+";
-        if (balance < 5000) estimatedRank = "2000+";
-        else if (balance < 15000) estimatedRank = "1500+";
-
         myRankItem.innerHTML = `
-          <span class="lb-rank" style="font-size: 10px; color: #facc15;">#${estimatedRank}</span>
-          <span class="lb-name">${tgUser} (Siz)</span>
+          <span class="lb-rank" style="font-size: 10px; color: #facc15;">Siz</span>
+          <span class="lb-name">${tgUser}</span>
           <span class="lb-score">🪙 ${balance.toLocaleString()}</span>
         `;
         listEl.appendChild(myRankItem);
       }
     }
 
-    // REFERAL LINK ULASHISH (500 Tanga Bonus bilan)
+    // Balansni Supabase'ga Avto-saqlash
+    async function syncBalance() {
+      if (userId && userId !== 9999999) {
+        await supabaseClient
+          .from('stars_miner_users')
+          .update({ balance: balance })
+          .eq('telegram_id', userId);
+      }
+    }
+
+    // Referal Taklif Yuboruvchiga Bonus Berish
+    async function giveRefBonus(referrerId) {
+      let { data } = await supabaseClient
+        .from('stars_miner_users')
+        .select('balance')
+        .eq('telegram_id', referrerId)
+        .single();
+
+      if (data) {
+        let newBal = (data.balance || 0) + 500;
+        await supabaseClient
+          .from('stars_miner_users')
+          .update({ balance: newBal })
+          .eq('telegram_id', referrerId);
+      }
+    }
+
+    // Do'stlar bilan Ulashish (Referral)
     function shareGame() {
       const refLink = `https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
       const text = encodeURIComponent(`🎮 Telegram Stars Miner'da har oy Telegram Stars o'ynalyapti!\n\n⚡️ Mening havolam orqali kir va Bepul 500 TA TANGA bonus ol! 👇`);
       const shareUrl = `https://t.me/share/url?url=${refLink}&text=${text}`;
 
-      if (window.Telegram && window.Telegram.WebApp) {
-        window.Telegram.WebApp.openTelegramLink(shareUrl);
+      if (tg && tg.openTelegramLink) {
+        tg.openTelegramLink(shareUrl);
       } else {
         window.open(shareUrl, '_blank');
       }
     }
 
-    updateUI();
+    // Ishga tushirish
+    initUser();
+    setInterval(syncBalance, 4000); // Har 4 soniyada Supabase'ga saqlaydi
+    setInterval(renderLeaderboard, 15000); // Har 15 soniyada reytingni yangilaydi
   </script>
 </body>
   </html>
-    
+  

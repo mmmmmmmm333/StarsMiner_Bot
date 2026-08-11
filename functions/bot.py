@@ -28,6 +28,8 @@ async def cmd_start(message: types.Message):
     )
 
 
+# Barcha so'rovlarni qabul qilish uchun yo'lni "/" qildik
+@app.post("/")
 @app.post("/.netlify/functions/bot")
 async def webhook(request: Request):
   if not bot:

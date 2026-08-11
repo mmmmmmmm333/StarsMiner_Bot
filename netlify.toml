@@ -2,8 +2,7 @@
   publish = "."
   functions = "functions"
 
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
+[functions]
+  directory = "functions"
+  node_bundler = "esbuild" # Python uchun shart emas, lekin Netlify muhitini barqarorlashtiradi
   

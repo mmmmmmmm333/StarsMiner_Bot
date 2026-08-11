@@ -1,12 +1,7 @@
 import os
-
-# Kutubxonalar o'rnatilmagan bo'lsa xatolikni oldini olish uchun
-try:
-  from aiogram import Bot, Dispatcher, types
-  from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-  from fastapi import FastAPI, Request
-except ImportError as e:
-  print(f"Import xatoligi: {e}")
+from aiogram import Bot, Dispatcher, types
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from fastapi import FastAPI, Request
 
 TOKEN = os.getenv("BOT_TOKEN")
 bot = Bot(token=TOKEN) if TOKEN else None
@@ -17,12 +12,12 @@ app = FastAPI()
 
 @app.get("/api")
 async def root():
-  return {"status": "Bot and Game are running perfectly!"}
+  return {"status": "Running"}
 
 
 @dp.message()
 async def cmd_start(message: types.Message):
-  if message.text == "/start":
+  if message.text and message.text.startswith("/start"):
     keyboard = InlineKeyboardMarkup(inline_keyboard=[[
         InlineKeyboardButton(
             text="🎮 O'yinni ochish",
@@ -39,7 +34,7 @@ async def cmd_start(message: types.Message):
 @app.post("/api/index")
 async def webhook(request: Request):
   if not bot:
-    return {"error": "Bot token topilmadi"}
+    return {"error": "Token topilmadi"}
   try:
     json_data = await request.json()
     update = types.Update(**json_data)
@@ -47,4 +42,4 @@ async def webhook(request: Request):
   except Exception as e:
     print(f"Xatolik: {e}")
   return {"ok": True}
-  
+    

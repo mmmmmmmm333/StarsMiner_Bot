@@ -6,9 +6,9 @@
   <title>Telegram Stars Miner</title>
 
   <script src="//libtl.com/sdk.js" data-zone="11547245" data-sdk="show_11547245"></script>
-
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
   <style>
     * {
       box-sizing: border-box;
@@ -134,24 +134,30 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      text-decoration: none;
     }
     .btn:active { transform: scale(0.96); opacity: 0.9; }
-    .btn-ad { background: linear-gradient(90deg, #eab308, #ca8a04); color: #000; grid-column: span 2; font-size: 12px; }
+    .btn-ad { background: linear-gradient(90deg, #eab308, #ca8a04); color: #000; width: 100%; font-size: 12px; }
     .btn-upgrade { background: #334155; color: #fff; border: 1px solid rgba(255,255,255,0.1); }
     .btn-upgrade span { color: #facc15; font-size: 10px; margin-top: 2px; }
-    .btn-share { background: #22c55e; color: #fff; grid-column: span 2; padding: 12px; font-size: 12px; }
+    .btn-share { background: #22c55e; color: #fff; width: 100%; padding: 12px; font-size: 12px; }
     
-    /* 📸 ISBOTLAR KANALI TUGMASI STILI */
-    .btn-proof { 
-      background: linear-gradient(90deg, #0088cc 0%, #00a8ff 100%); 
-      color: #fff; 
-      grid-column: span 2; 
-      padding: 12px; 
+    /* ISBOTLAR KANALI TUGMASI ALOHIDA KLASS */
+    .btn-proof-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      background: linear-gradient(90deg, #0088cc 0%, #00a8ff 100%);
+      color: #ffffff;
+      text-decoration: none;
+      padding: 12px;
+      border-radius: 10px;
+      font-weight: bold;
       font-size: 12px;
       box-shadow: 0 4px 12px rgba(0, 136, 204, 0.3);
       border: 1px solid rgba(255, 255, 255, 0.2);
     }
+    .btn-proof-link:active { transform: scale(0.96); }
 
     .leaderboard-box {
       width: 90%;
@@ -240,7 +246,7 @@
         👥 Do'stingizni taklif qiling va 500 ta tanga oling!
       </button>
 
-      <a href="https://t.me/Stars_Miners_Isbotlar" target="_blank" class="btn btn-proof">
+      <a href="https://t.me/Stars_Miners_Isbotlar" target="_blank" class="btn-proof-link">
         📸 To'lovlar va Isbotlar kanali ⭐️
       </a>
     </div>
@@ -333,7 +339,7 @@
 
     function updateUI() {
       balanceEl.innerText = balance.toLocaleString();
-      energyTextEl.innerText = `${energy} /${maxEnergy}`;
+      energyTextEl.innerText = `${energy} / ${maxEnergy}`;
       energyFillEl.style.width = `${(energy / maxEnergy) * 100}%`;
       
       document.getElementById('multitap-cost').innerText = `💰 ${multitapCost} tanga (+${tapPower})`;
@@ -461,5 +467,74 @@
         item.innerHTML = `
           <span class="lb-rank">${medal}</span>
           <span class="lb-name">${player.first_name || "O'yinchi"}</span>
-          <span class="lb-score">🪙 ${Number
-    
+          <span class="lb-score">🪙 ${Number(player.balance).toLocaleString()}</span>
+        `;
+        listEl.appendChild(item);
+      });
+
+      const isInTop10 = cachedTopPlayers.some(p => p.first_name === tgUser);
+      if (!isInTop10) {
+        const myRankItem = document.createElement('div');
+        myRankItem.className = 'lb-item my-rank';
+        myRankItem.innerHTML = `
+          <span class="lb-rank" style="font-size: 10px; color: #facc15;">Siz</span>
+          <span class="lb-name">${tgUser}</span>
+          <span class="lb-score">🪙 ${balance.toLocaleString()}</span>
+        `;
+        listEl.appendChild(myRankItem);
+      }
+    }
+
+    let syncTimer;
+    function debouncedSync() {
+      clearTimeout(syncTimer);
+      syncTimer = setTimeout(syncBalance, 1500);
+    }
+
+    async function syncBalance() {
+      if (userId) {
+        await supabaseClient
+          .from('stars_miner_users')
+          .update({ balance: balance })
+          .eq('telegram_id', userId);
+      }
+    }
+
+    async function giveRefBonus(referrerId) {
+      let { data } = await supabaseClient
+        .from('stars_miner_users')
+        .select('balance')
+        .eq('telegram_id', referrerId)
+        .maybeSingle();
+
+      if (data) {
+        let newBal = (data.balance || 0) + 500;
+        await supabaseClient
+          .from('stars_miner_users')
+          .update({ balance: newBal })
+          .eq('telegram_id', referrerId);
+      }
+    }
+
+    function shareGame() {
+      if (!userId) {
+        alert("Telegram ichidan kiring!");
+        return;
+      }
+      const refLink = `https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
+      const text = `🎮 Telegram Stars Miner'da har oy Telegram Stars o'ynalyapti!\n\n⚡️ Mening havolam orqali kir va Bepul 500 TA TANGA bonus ol! 👇`;
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(text)}`;
+
+      if (tg && tg.openTelegramLink) {
+        tg.openTelegramLink(shareUrl);
+      } else {
+        window.open(shareUrl, '_blank');
+      }
+    }
+
+    initUser();
+    setInterval(renderLeaderboard, 10000);
+  </script>
+</body>
+</html>
+

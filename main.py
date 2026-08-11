@@ -22,7 +22,7 @@ async def cmd_start(message: types.Message):
     )
 
 
-@app.post("/")
+@app.post("/webhook")
 async def webhook(request: Request):
   json_data = await request.json()
   update = types.Update(**json_data)
